@@ -6,12 +6,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title></title>
-    <link rel="shortcut icon" type="image/png" href="./assets/images/logos/favicon.png" />
+    <link rel="shortcut icon" type="image/png" href="{{ asset('assets/images/logos/favicon.png') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/styles.min.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/custom.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/activities.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/status.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/approve.css') }}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
@@ -41,20 +42,34 @@
         </nav>
 
         <div class="topbar-right">
-            <button class="bell-btn" aria-label="Notifications">
-                <i class="fas fa-bell"></i>
-                <span class="badge"></span>
-            </button>
-            <div class="user-section">
-                <div class="user-info">
-                    <div class="name">สิชาพัทธ สุขวิชัย</div>
-                    <div class="role">พนักงาน</div>
+            @guest
+                <a href="{{ route('login') }}" class="btn-primary" style="text-decoration:none; padding: 8px 16px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-sign-in-alt"></i> ลงชื่อเข้าใช้
+                </a>
+            @else
+                <div class="user-section dropdown">
+                    <div class="d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
+                        <div class="user-info">
+                            <div class="name">{{ Auth::user()->name }}</div>
+                            <div class="role">{{ Auth::user()->role->role_name ?? 'พนักงาน' }}</div>
+                        </div>
+                        <div class="user-avatar ms-2">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                @csrf
+                            </form>
+                            <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="fas fa-sign-out-alt me-2"></i> ออกจากระบบ
+                            </a>
+                        </li>
+                    </ul>
                 </div>
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <i class="fas fa-sign-out-alt logout-arrow"></i>
-            </div>
+            @endguest
         </div>
     </header>
     <!-- Sidebar Start -->
@@ -68,11 +83,11 @@
 
     </div>
     </div>
-    <script src="./assets/libs/jquery/dist/jquery.min.js"></script>
-    <script src="./assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./assets/js/sidebarmenu.js"></script>
-    <script src="./assets/js/app.min.js"></script>
-    <script src="./assets/libs/simplebar/dist/simplebar.js"></script>
+    <script src="{{ asset('assets/libs/jquery/dist/jquery.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/js/sidebarmenu.js') }}"></script>
+    <script src="{{ asset('assets/js/app.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/simplebar/dist/simplebar.js') }}"></script>
     <!-- solar icons -->
     <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 </body>

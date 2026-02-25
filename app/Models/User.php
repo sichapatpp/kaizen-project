@@ -63,7 +63,7 @@ class User extends Authenticatable
         }
         public function kaizenHistories()
         {
-            return $this->hasMany(KaizenHistori::class);
+            return $this->hasMany(KaizenHistory::class);
         }
 
         public function kaizenFiles()

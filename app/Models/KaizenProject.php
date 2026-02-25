@@ -19,10 +19,16 @@ class KaizenProject extends Model
         'title',
         'problem',
         'improvement',
-        'result',
+        'result', 
+        'actual_result', 
         'user_id',
         'status',
         'improvement_types',
+        'other_improvement_detail',
+        'performance_detail',
+        'is_achieved',
+        'not_achieved_detail',
+        'budget_used',
     ];
 
     protected $casts = [
@@ -31,31 +37,31 @@ class KaizenProject extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class , 'user_id');
     }
 
     public function participants()
     {
-        return $this->hasMany(KaizenParticipant::class, 'kaizen_project_id');
+        return $this->hasMany(KaizenParticipant::class , 'kaizen_project_id');
     }
 
     public function files()
     {
-        return $this->hasMany(KaizenFile::class, 'kaizen_project_id');
+        return $this->hasMany(KaizenFile::class , 'kaizen_project_id');
     }
 
     public function histories()
     {
-        return $this->hasMany(KaizenHistori::class, 'kaizen_project_id');
+        return $this->hasMany(KaizenHistory::class , 'kaizen_project_id');
     }
 
     public function indicators()
     {
-        return $this->hasMany(KaizenIndiator::class, 'kaizen_project_id');
+        return $this->hasMany(KaizenIndicator::class , 'kaizen_project_id');
     }
 
     public function reviews()
     {
-        return $this->hasMany(KaizenReview::class, 'kaizen_project_id');
+        return $this->hasMany(KaizenReview::class , 'kaizen_project_id');
     }
 }
