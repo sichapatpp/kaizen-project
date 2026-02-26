@@ -566,8 +566,10 @@ function renderPendingList(pendingActivities) {
             </div>
             <div class="approval-actions">
               <button class="btn-view-detail" data-action="view-detail" data-id="${activity.id}">👁️ ดูรายละเอียด</button>
+              @if(auth()->user()->role->role_name !== 'admin')
               <button class="btn-approve" data-action="approve" data-id="${activity.id}">✅ ${approveLabel}</button>
               <button class="btn-reject" data-action="reject" data-id="${activity.id}">❌ ไม่อนุมัติ</button>
+              @endif
             </div>
           </div>
         `}).join('')}
