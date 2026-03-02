@@ -218,7 +218,6 @@ class KaizenController extends Controller
 
     public function status()
     {
-        // เพิ่ม indicators ใน with() เพื่อดึงตัวชี้วัดมาด้วย
         $projects = KaizenProject::with(['user', 'participants', 'files', 'reviews.user', 'indicators'])
             ->orderBy('created_at', 'desc')
             ->get();
