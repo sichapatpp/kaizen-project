@@ -26,23 +26,24 @@
             font-family: 'Prompt', sans-serif;
         }
 
-        body {
+        html, body {
+            height: 100%;
+            overflow: hidden;
             background-color: var(--bg);
             color: var(--text-main);
-            overflow-x: hidden;
         }
 
-        /* ─── Layout ─── */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
+        .page-wrapper {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         /* ─── Hero Section ─── */
         .hero {
+            flex: 0 0 auto;
             position: relative;
-            padding: 100px 0 80px;
+            padding: 36px 0 28px;
             text-align: center;
             background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
             overflow: hidden;
@@ -51,10 +52,10 @@
         .hero::before {
             content: "";
             position: absolute;
-            top: -100px;
-            right: -100px;
-            width: 300px;
-            height: 300px;
+            top: -80px;
+            right: -80px;
+            width: 240px;
+            height: 240px;
             background: rgba(37, 99, 235, 0.05);
             border-radius: 50%;
             z-index: 0;
@@ -63,33 +64,36 @@
         .hero-content {
             position: relative;
             z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
         }
 
         .hero-icon {
-            font-size: 64px;
-            margin-bottom: 24px;
+            font-size: 42px;
+            margin-bottom: 10px;
             display: inline-block;
             animation: float 3s ease-in-out infinite;
         }
 
         @keyframes float {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-8px); }
         }
 
         .hero h1 {
-            font-size: 3rem;
+            font-size: 2rem;
             font-weight: 800;
             color: var(--primary);
-            margin-bottom: 16px;
+            margin-bottom: 8px;
             letter-spacing: -0.5px;
         }
 
         .hero p {
-            font-size: 1.25rem;
+            font-size: 0.95rem;
             color: var(--text-sub);
-            max-width: 600px;
-            margin: 0 auto 40px;
+            max-width: 520px;
+            margin: 0 auto 20px;
             line-height: 1.6;
         }
 
@@ -99,155 +103,174 @@
             gap: 10px;
             background-color: var(--primary);
             color: var(--white);
-            padding: 16px 40px;
+            padding: 11px 30px;
             border-radius: 50px;
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 600;
             text-decoration: none;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
         }
 
         .btn-login:hover {
             background-color: var(--primary-dark);
             transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.4);
         }
 
         /* ─── Stats Section ─── */
         .stats {
-            padding: 60px 0;
-            margin-top: -50px;
+            flex: 0 0 auto;
+            padding: 16px 24px;
+            background: var(--bg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
         }
 
         .stat-card {
             background: var(--white);
-            padding: 32px;
-            border-radius: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 18px 22px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 16px;
             transition: transform 0.3s ease;
         }
 
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
+        .stat-card:hover { transform: translateY(-3px); }
 
         .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
+            flex-shrink: 0;
         }
 
         .stat-info .count {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--text-main);
             display: block;
         }
 
         .stat-info .label {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-sub);
             font-weight: 500;
         }
 
-        .icon-total { background: #eff6ff; color: var(--primary); }
+        .icon-total     { background: #eff6ff; color: var(--primary); }
         .icon-completed { background: #ecfdf5; color: var(--success); }
-        .icon-progress { background: #fffbeb; color: var(--warning); }
+        .icon-progress  { background: #fffbeb; color: var(--warning); }
 
         /* ─── Features Section ─── */
         .features {
-            padding: 100px 0;
+            flex: 1 1 auto;
+            padding: 16px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .section-header {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 16px;
         }
 
         .section-header h2 {
-            font-size: 2.25rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            margin-bottom: 16px;
+            margin-bottom: 6px;
+        }
+
+        .section-header p {
+            font-size: 0.88rem;
+            color: var(--text-sub);
         }
 
         .feature-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 32px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
         }
 
         .feature-card {
-            padding: 40px;
+            padding: 22px 24px;
             background: var(--white);
-            border-radius: 24px;
+            border-radius: 18px;
             border: 1px solid #f1f5f9;
             transition: all 0.3s ease;
         }
 
         .feature-card:hover {
             border-color: var(--primary);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
         }
 
         .f-icon {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             background: var(--primary);
             color: var(--white);
-            border-radius: 12px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            margin-bottom: 24px;
+            font-size: 17px;
+            margin-bottom: 14px;
         }
 
         .feature-card h3 {
-            font-size: 1.25rem;
-            margin-bottom: 12px;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
             font-weight: 600;
         }
 
         .feature-card p {
             color: var(--text-sub);
-            line-height: 1.6;
+            line-height: 1.55;
+            font-size: 0.83rem;
         }
 
         /* ─── Footer ─── */
         footer {
-            padding: 40px 0;
+            flex: 0 0 auto;
+            padding: 12px 0;
             text-align: center;
             color: var(--text-sub);
-            font-size: 14px;
+            font-size: 12px;
             border-top: 1px solid #e2e8f0;
+            background: var(--white);
         }
 
         @media (max-width: 768px) {
-            .hero h1 { font-size: 2.25rem; }
-            .hero { padding: 80px 0 60px; }
-            .feature-grid { grid-template-columns: 1fr; }
+            html, body { overflow: auto; }
+            .stats-grid, .feature-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 1.6rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Hero Section -->
+<div class="page-wrapper">
+
+    <!-- Hero -->
     <section class="hero">
-        <div class="container hero-content">
+        <div class="hero-content">
             <div class="hero-icon">🏆</div>
             <h1>Kaizen System</h1>
             <p>ระบบจัดการกิจกรรม Kaizen สำหรับองค์กร เพื่อขับเคลื่อนนวัตกรรมและพัฒนาประสิทธิภาพการทำงานอย่างต่อเนื่อง</p>
@@ -257,7 +280,7 @@
         </div>
     </section>
 
-    <!-- Stats Section -->
+    <!-- Stats -->
     <section class="stats">
         <div class="container">
             <div class="stats-grid">
@@ -292,7 +315,7 @@
         </div>
     </section>
 
-    <!-- Features Section -->
+    <!-- Features -->
     <section class="features">
         <div class="container">
             <div class="section-header">
@@ -319,11 +342,14 @@
         </div>
     </section>
 
+    <!-- Footer -->
     <footer>
         <div class="container">
             &copy; {{ date('Y') + 543 }} Kaizen System. All rights reserved.
         </div>
     </footer>
+
+</div>
 
 </body>
 </html>

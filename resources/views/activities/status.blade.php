@@ -80,11 +80,11 @@
           <thead>
             <tr>
               <th style="width: 50px;">ลำดับ</th>
-              <th style="min-width: 250px;">ชื่อกิจกรรม</th>
-              <th style="width: 140px;">สถานะ</th>
-              <th style="width: 200px;">ประเภท</th>
-              <th style="width: 150px;">ผู้ยื่น</th>
-              <th style="width: 120px;">จัดการ</th>
+              <th style="width: 200px;">ชื่อกิจกรรม</th>
+              <th style="width: 130px;">สถานะ</th>
+              <th>ประเภท</th>
+              <th style="width: 120px;">ผู้ยื่น</th>
+              <th style="width: 100px;">จัดการ</th>
             </tr>
           </thead>
           <tbody id="activitiesTableBody">
@@ -317,14 +317,11 @@ const REPORT_STATUSES = [
 let filteredData = [...activitiesData];
 
 /* ══════════════════════════════════════════
-   INIT — ผูก Event ทั้งหมดที่ document ระดับเดียว
-   เพื่อไม่ให้หลุดเมื่อ tbody ถูก re-render
+   INIT
 ════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function () {
   renderTable();
 
-  // ✅ ผูก click ที่ document แทน tbody
-  // ทำให้ปุ่มใน tbody ที่ถูก re-render ใหม่ทุกครั้ง ยังทำงานได้ปกติ
   document.addEventListener('click', function (e) {
     const btn = e.target.closest('[data-action="view-detail"]');
     if (btn) {
@@ -333,7 +330,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // ปิด Modal เมื่อคลิก Overlay
   const detailModal = document.getElementById('detailModal');
   if (detailModal) {
     detailModal.addEventListener('click', function (e) {
@@ -341,13 +337,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ปุ่ม ✕ ปิด Modal
   const btnCloseModal = document.getElementById('btnCloseDetailModal');
   if (btnCloseModal) {
     btnCloseModal.addEventListener('click', closeDetailModal);
   }
 
-  // ปิด Modal ด้วย Escape
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeDetailModal();
   });
@@ -377,12 +371,12 @@ function renderTable() {
 
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td style="color: #6b7280; font-weight: 500;">${index + 1}</td>
+        <td style="color:#6b7280; font-weight:500; text-align:center;">${index + 1}</td>
         <td>
           <div class="activity-name"
                data-action="view-detail"
                data-id="${activity.id}"
-               style="cursor: pointer;">
+               style="cursor:pointer; font-weight:500; color:#1e293b;">
             ${activity.name}
           </div>
         </td>
@@ -392,9 +386,13 @@ function renderTable() {
           </span>
         </td>
         <td>
-          ${activity.types.map(type => `<span class="type-tag">${typeLabels[type] || type}</span>`).join('')}
+          <div style="display:flex; flex-wrap:wrap; gap:3px;">
+            ${activity.types.map(type =>
+              `<span class="type-tag" style="font-size:11px; padding:2px 6px; white-space:nowrap;">${typeLabels[type] || type}</span>`
+            ).join('')}
+          </div>
         </td>
-        <td>${activity.submitter}</td>
+        <td style="color:#475569;">${activity.submitter}</td>
         <td>
           <div class="action-buttons">
             <button class="btn-action primary"
@@ -435,13 +433,11 @@ function showDetail(id) {
   const activity = activitiesData.find(a => a.id === id);
   if (!activity) return;
 
-  /* ── Header ── */
   document.getElementById('modalTitle').textContent    = activity.name;
   document.getElementById('modalSubtitle').textContent = activity.code || '';
   document.getElementById('modalStatus').className     = `status-badge status-${activity.status}`;
   document.getElementById('modalStatus').innerHTML     = `<span class="dot"></span>${statusLabels[activity.status] || activity.status}`;
 
-  /* ── Info Grid ── */
   document.getElementById('detailActivityName').textContent = activity.name;
   document.getElementById('detailTypes').innerHTML = activity.types.map(type =>
     `<span class="type-tag">${typeLabels[type] || type}</span>`
@@ -449,22 +445,18 @@ function showDetail(id) {
   document.getElementById('detailSubmitter').textContent = activity.submitter;
   document.getElementById('detailStatus').textContent    = statusLabels[activity.status] || activity.status;
 
-  /* ── ข้อความ 3 ส่วน ── */
   document.getElementById('detailProblem').textContent  = activity.problem  || '—';
   document.getElementById('detailSolution').textContent = activity.solution || '—';
   document.getElementById('detailResult').textContent   = activity.result   || '—';
 
-  /* ── รูปภาพ ส่วนที่ 1-3 ── */
   renderImages('problemImages',  activity.problem_images);
   renderImages('solutionImages', activity.solution_images);
   renderImages('resultImages',   activity.result_images);
 
-  /* ── ส่วนที่ 4: รูปภาพประกอบผลงาน ── */
   const actualGallery = document.getElementById('actualImages');
   const actualEmpty   = document.getElementById('actualImagesEmpty');
   const actualImgs    = activity.actual_images || [];
 
-  // ลบรูปเก่าทิ้งก่อน (คง empty text ไว้)
   actualGallery.querySelectorAll('a').forEach(el => el.remove());
 
   if (actualImgs.length > 0) {
@@ -479,7 +471,6 @@ function showDetail(id) {
     actualEmpty.style.display = 'inline';
   }
 
-  /* ══ ส่วนผลการดำเนินงาน ══ */
   const reportSection  = document.getElementById('reportSection');
   const modalReportBtn = document.getElementById('modalReportBtn');
   const reportUrl      = `/activities/${activity.id}/report`;
@@ -489,7 +480,6 @@ function showDetail(id) {
   if (hasReport) {
     reportSection.style.display = 'block';
 
-    // ผลลัพธ์ที่เกิดขึ้นจริง
     const actualResultBlock = document.getElementById('actualResultBlock');
     if (activity.actual_result) {
       actualResultBlock.style.display = 'block';
@@ -498,7 +488,6 @@ function showDetail(id) {
       actualResultBlock.style.display = 'none';
     }
 
-    // รายละเอียดการดำเนินงานเพิ่มเติม
     const perfBlock = document.getElementById('performanceDetailBlock');
     if (activity.performance_detail) {
       perfBlock.style.display = 'block';
@@ -507,7 +496,6 @@ function showDetail(id) {
       perfBlock.style.display = 'none';
     }
 
-    // ตัวชี้วัด
     const indicators = activity.indicators || [];
     const indBlock   = document.getElementById('indicatorsBlock');
     if (indicators.length > 0) {
@@ -536,7 +524,6 @@ function showDetail(id) {
       indBlock.style.display = 'none';
     }
 
-    // งบประมาณ + เป้าหมาย
     const budgetBlock     = document.getElementById('budgetAchievedBlock');
     const hasAchievedData = activity.is_achieved !== null && activity.is_achieved !== undefined;
     if (activity.status === 'completed' && (activity.budget_used || hasAchievedData)) {
@@ -563,7 +550,6 @@ function showDetail(id) {
       budgetBlock.style.display = 'none';
     }
 
-    // เหตุผลที่ไม่บรรลุ
     const notAchievedBlock = document.getElementById('notAchievedBlock');
     if (activity.status === 'completed' && activity.is_achieved == 0 && activity.not_achieved_detail) {
       notAchievedBlock.style.display = 'block';
@@ -576,7 +562,6 @@ function showDetail(id) {
     reportSection.style.display = 'none';
   }
 
-  // ปุ่ม footer
   if (hasReport && isOwner && activity.status !== 'completed') {
     modalReportBtn.href          = reportUrl;
     modalReportBtn.style.display = 'inline-flex';
@@ -584,7 +569,6 @@ function showDetail(id) {
     modalReportBtn.style.display = 'none';
   }
 
-  /* ── Collaborators ── */
   const collabHtml = (activity.collaborators || []).map(collab => `
     <div class="collaborator-card">
       <div class="collaborator-info">
@@ -597,7 +581,6 @@ function showDetail(id) {
   document.getElementById('detailCollaborators').innerHTML =
     collabHtml || '<span style="color:#94a3b8">ไม่มีผู้ร่วมงาน</span>';
 
-  /* ── Reviews ── */
   const reviews       = activity.reviews || [];
   const reviewSection = document.getElementById('reviewsSection');
   if (reviews.length === 0) {
@@ -637,7 +620,6 @@ function getReviewApproveLabel(review) {
   return 'เห็นชอบ';
 }
 
-/* helper: render รูปภาพใส่ container */
 function renderImages(containerId, images) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -658,9 +640,7 @@ function renderImages(containerId, images) {
 ════════════════════════════════════════════ */
 function closeDetailModal() {
   const modal = document.getElementById('detailModal');
-  if (modal) {
-    modal.classList.remove('show');
-  }
+  if (modal) modal.classList.remove('show');
   document.getElementById('modalTitle').textContent    = '';
   document.getElementById('modalSubtitle').textContent = '';
   document.getElementById('detailReviews').innerHTML   = '';
