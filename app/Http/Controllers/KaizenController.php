@@ -9,10 +9,14 @@ use App\Models\KaizenIndicator;
 use App\Models\KaizenHistory;
 use App\Models\KaizenReview;
 use App\Models\User;
+use App\Models\Notification;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\KaizenStatusMail;
 
 class KaizenController extends Controller
 {
@@ -288,6 +292,7 @@ class KaizenController extends Controller
                 'budget_used' => $item->budget_used,
                 'is_achieved' => $item->is_achieved,
                 'not_achieved_detail' => $item->not_achieved_detail,
+                'award_type' => $item->award_type,
                 'indicators' => $indicators,
 
                 'collaborators' => $item->participants->map(function ($p) {
@@ -582,6 +587,7 @@ class KaizenController extends Controller
                 'budget_used' => $item->budget_used,
                 'is_achieved' => $item->is_achieved,
                 'not_achieved_detail' => $item->not_achieved_detail,
+                'award_type' => $item->award_type,
                 'indicators' => $indicators,
                 'collaborators' => $item->participants->map(function ($p) {
                     return [
@@ -659,17 +665,88 @@ class KaizenController extends Controller
         ]);
     }
 
+    public function giveAward(Request $request, $id)
+    {
+        $request->validate([
+            'award_type' => 'required|in:Platinum,Gold,Silver,Bronze',
+        ]);
+
+        $project = KaizenProject::findOrFail($id);
+
+        if ($project->status !== 'completed') {
+            return response()->json(['success' => false, 'message' => 'ให้รางวัลได้เฉพาะกิจกรรมที่เสร็จสิ้นแล้วเท่านั้น'], 422);
+        }
+
+        $project->award_type = $request->award_type;
+        $project->save();
+
+        return response()->json(['success' => true, 'message' => 'บันทึกรางวัลเรียบร้อยแล้ว']);
+    }
+
     private function logStatusChange($projectId, $oldStatus, $newStatus)
     {
         if ($oldStatus === $newStatus)
             return;
 
+        $userId = Auth::id();
+
         KaizenHistory::create([
             'kaizen_project_id' => $projectId,
             'old_status' => $oldStatus ?: 'none',
             'new_status' => $newStatus,
-            'user_id' => Auth::id(),
+            'user_id' => $userId,
         ]);
+
+        $project = KaizenProject::find($projectId, ['*']);
+        
+        // Log the activity
+        ActivityLog::create([
+            'kaizen_project_id' => $projectId,
+            'user_id' => $userId,
+            'action' => 'changed_status',
+            'status' => $newStatus,
+            'comment' => "Status changed from {$oldStatus} to {$newStatus}",
+        ]);
+
+        // Send Notification to project owner if status was approved or rejected
+        if ($project && $project->user_id !== $userId) {
+            $title = '';
+            $message = '';
+            $statusTh = '';
+
+            switch ($newStatus) {
+                case 'in_progress':
+                    if ($oldStatus === 'rejected' || $oldStatus === 'waiting_for_manager_result_approval' || $oldStatus === 'waiting_for_chairman_approval') {
+                        $statusTh = 'ส่งกลับแก้ไข';
+                    } else if ($oldStatus === 'pending') {
+                         $statusTh = 'อนุมัติ (เริ่มดำเนินการ)';
+                    }
+                    break;
+                case 'waiting_for_chairman_approval':
+                    $statusTh = 'ผ่านการอนุมัติจากหัวหน้าแล้ว (รอประธานพิจารณา)';
+                    break;
+                case 'completed':
+                    $statusTh = 'อนุมัติโดยประธานเรียบร้อยแล้ว (เสร็จสิ้น)';
+                    break;
+                case 'rejected':
+                    $statusTh = 'ถูกปฏิเสธ';
+                    break;
+            }
+
+            if ($statusTh !== '') {
+                Notification::create([
+                    'user_id' => $project->user_id,
+                    'kaizen_project_id' => $projectId,
+                    'title' => "อัปเดตสถานะกิจกรรม: {$project->title}",
+                    'message' => "กิจกรรม '{$project->title}' ของคุณได้รับการ {$statusTh} แล้วโดย " . Auth::user()->name,
+                ]);
+
+                // ส่งอีเมลแจ้งเตือนเจ้าของกิจกรรม
+                if ($project->user && $project->user->email) {
+                    Mail::to($project->user->email)->send(new KaizenStatusMail($project, $statusTh));
+                }
+            }
+        }
     }
 
     /**

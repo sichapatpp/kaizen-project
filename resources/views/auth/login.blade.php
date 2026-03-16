@@ -87,9 +87,9 @@
 
              <div class="p-3 border rounded mb-3"
                  style="cursor:pointer;"
-                 onclick="fillLogin('User21@gmail.com')">
+                 onclick="fillLogin('sichapatsuckvichai@gmail.com')">
                 <strong>ผู้ใช้งานทั่วไป</strong><br>
-                <small class="text-muted">User21@gmail.com</small>
+                <small class="text-muted">sichapatsuckvichai@gmail.com</small>
             </div>
 
             <div class="p-3 border rounded mb-3"

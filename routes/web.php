@@ -7,6 +7,8 @@ use App\Http\Controllers\KaizenController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TestEmail;
 
 Route::get('/', function () {
     if (Illuminate\Support\Facades\Auth::check()) {
@@ -54,11 +56,19 @@ Route::middleware(['auth'])->group(function () {
     // ── Manager / Chairman / Admin ─────────────────────────────────────────
     Route::middleware(['role:manager,chairman,admin'])->group(function () {
             Route::post('/activities/{id}/update-status', [KaizenController::class , 'updateStatus'])->name('activities.updateStatus');
+            Route::post('/activities/{id}/award', [KaizenController::class , 'giveAward'])->name('activities.award');
         }
         );
 
         // ── Dashboard ──────────────────────────────────────────────────────────
         Route::get('/dashboard', [DashboardController::class , 'index'])->name('dashboard');
+        Route::get('/dashboard/export/excel', [DashboardController::class , 'exportExcel'])->name('dashboard.export.excel');
+        Route::get('/dashboard/export/pdf', [DashboardController::class , 'exportPdf'])->name('dashboard.export.pdf');
+
+        // ── Notifications ──────────────────────────────────────────────────────
+        Route::get('/notifications/unread', [App\Http\Controllers\NotificationController::class, 'getUnread'])->name('notifications.unread');
+        Route::post('/notifications/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::post('/notifications/read-all', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
 
         // ── Admin only ─────────────────────────────────────────────────────────
         Route::middleware(['role:admin'])->group(function () {
@@ -67,4 +77,11 @@ Route::middleware(['auth'])->group(function () {
             Route::post('user/{id}/toggle-status', [UserController::class , 'toggleStatus'])->name('user.toggle-status');
         }
         );
+        
     });
+     Route::get('/send-mail', function () {
+    // ใส่อีเมลปลายทางที่คุณต้องการส่งไปหา
+    Mail::to('sichapatsuckvichai@gmail.com')->send(new TestEmail());
+
+    return 'ส่งอีเมลสำเร็จแล้ว!';
+     }); 

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\KaizenProject;
+use App\Models\Notification;
+use App\Models\ActivityLog;
 
 
 class User extends Authenticatable
@@ -64,6 +66,16 @@ class User extends Authenticatable
         public function kaizenHistories()
         {
             return $this->hasMany(KaizenHistory::class);
+        }
+
+        public function notifications()
+        {
+            return $this->hasMany(Notification::class);
+        }
+
+        public function activityLogs()
+        {
+            return $this->hasMany(ActivityLog::class);
         }
 
         public function kaizenFiles()

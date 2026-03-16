@@ -276,22 +276,25 @@
 /* Action Buttons */
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   justify-content: center;
+  align-items: center;
 }
 
 .btn-action {
-  padding: 8px 16px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   background: white;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
 }
 
 .btn-action:hover {

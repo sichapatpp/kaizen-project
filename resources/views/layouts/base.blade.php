@@ -41,7 +41,28 @@
             </a>
         </nav>
 
-        <div class="topbar-right">
+        <div class="topbar-right align-items-center d-flex gap-3">
+            @auth
+                <!-- Notification Bell -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link position-relative notification-bell" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-bell fs-5"></i>
+                        <span class="position-absolute top-10 start-80 translate-middle badge rounded-pill bg-danger" id="notification-count" style="display: none;">
+                            0
+                        </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end p-0 shadow overflow-hidden" aria-labelledby="notificationDropdown" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                        <li class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+                            <span class="fw-bold">การแจ้งเตือน</span>
+                            <a href="#" class="text-primary text-decoration-none small" id="mark-all-read">อ่านทั้งหมด</a>
+                        </li>
+                        <div id="notification-list">
+                            <li class="p-3 text-center text-muted small">ไม่มีการแจ้งเตือนใหม่</li>
+                        </div>
+                    </ul>
+                </div>
+            @endauth
+
             @guest
                 <a href="{{ route('login') }}" class="btn-primary" style="text-decoration:none; padding: 8px 16px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px;">
                     <i class="fas fa-sign-in-alt"></i> ลงชื่อเข้าใช้
@@ -90,6 +111,95 @@
     <script src="{{ asset('assets/libs/simplebar/dist/simplebar.js') }}"></script>
     <!-- solar icons -->
     <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+
+    @auth
+    <script>
+        $(document).ready(function() {
+            function fetchNotifications() {
+                $.ajax({
+                    url: '{{ route("notifications.unread") }}',
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            const countLabel = $('#notification-count');
+                            if (response.count > 0) {
+                                countLabel.text(response.count).show();
+                            } else {
+                                countLabel.hide();
+                            }
+
+                            const listContainer = $('#notification-list');
+                            listContainer.empty();
+
+                            if (response.notifications.length > 0) {
+                                response.notifications.forEach(function(notification) {
+                                    // Make notification item clickable to mark as read
+                                    const bgColor = notification.is_read ? 'bg-white' : 'bg-light';
+                                    const textClass = notification.is_read ? 'text-dark' : 'text-primary fw-bold';
+                                    const kaizenUrl = notification.kaizen_project_id ? `/activities/show/${notification.kaizen_project_id}` : '/activities/status';
+
+                                    const li = `
+                                        <li class="p-3 border-bottom notification-item ${bgColor}" data-id="${notification.id}" data-url="${kaizenUrl}" style="cursor: pointer;">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1 ${textClass}" style="font-size: 0.85rem;">${notification.title}</h6>
+                                                <small class="text-muted" style="font-size: 0.75rem;">${notification.created_at}</small>
+                                            </div>
+                                            <p class="mb-0 text-dark small" style="white-space: normal;">${notification.message}</p>
+                                        </li>
+                                    `;
+                                    listContainer.append(li);
+                                });
+                            } else {
+                                listContainer.append('<li class="p-3 text-center text-muted small">ไม่มีการแจ้งเตือนใหม่</li>');
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Initial fetch
+            fetchNotifications();
+
+            // Poll every 30 seconds
+            setInterval(fetchNotifications, 30000);
+
+            // Mark single notification as read
+            $(document).on('click', '.notification-item', function() {
+                const id = $(this).data('id');
+                const targetUrl = $(this).data('url');
+                $.ajax({
+                    url: `/notifications/${id}/read`,
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function() {
+                        if (targetUrl) {
+                            window.location.href = targetUrl;
+                        } else {
+                            fetchNotifications();
+                        }
+                    }
+                });
+            });
+
+            // Mark all as read
+            $('#mark-all-read').on('click', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: '{{ route("notifications.readAll") }}',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function() {
+                        fetchNotifications();
+                    }
+                });
+            });
+        });
+    </script>
+    @endauth
 </body>
 
 </html>

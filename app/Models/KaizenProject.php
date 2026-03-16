@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
 use App\Models\KaizenFile;
 use App\Models\KaizenParticipant;
+use App\Models\Notification;
+use App\Models\ActivityLog;
 
 class KaizenProject extends Model
 {
@@ -19,10 +21,11 @@ class KaizenProject extends Model
         'title',
         'problem',
         'improvement',
-        'result', 
-        'actual_result', 
+        'result',
+        'actual_result',
         'user_id',
         'status',
+        'award_type',
         'improvement_types',
         'other_improvement_detail',
         'performance_detail',
@@ -63,5 +66,15 @@ class KaizenProject extends Model
     public function reviews()
     {
         return $this->hasMany(KaizenReview::class , 'kaizen_project_id');
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'kaizen_project_id');
+    }
+
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class, 'kaizen_project_id');
     }
 }

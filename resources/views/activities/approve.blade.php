@@ -148,7 +148,7 @@
                 <th style="width: 140px;">ผู้ยื่น</th>
                 <th style="width: 180px;">สถานะ</th>
                 <th style="width: 150px;">วันที่อัปเดต</th>
-                <th style="width: 100px;">จัดการ</th>
+                <th style="width: 130px; text-align: center;">จัดการ</th>
               </tr>
             </thead>
             <tbody id="historyTableBody"></tbody>
@@ -331,6 +331,7 @@
   <span id="toast-msg">ดำเนินการสำเร็จ</span>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 const activitiesData = @json($activitiesData);
 
@@ -591,6 +592,7 @@ function updateHistoryTable() {
   const tbody = document.getElementById('historyTableBody');
   const emptyState = document.getElementById('emptyHistory');
   const countElement = document.getElementById('historyCount');
+  const userRole = "{{ auth()->user()->role->role_name }}";
 
   countElement.textContent = filteredHistory.length;
 
@@ -602,7 +604,24 @@ function updateHistoryTable() {
 
   emptyState.style.display = 'none';
 
-  tbody.innerHTML = filteredHistory.map(activity => `
+  tbody.innerHTML = filteredHistory.map(activity => {
+    let awardBtnHtml = '';
+    if (activity.status === 'completed' && userRole === 'chairman') {
+      if (activity.award_type) {
+         let bgStyle = '';
+         if(activity.award_type === 'Platinum') bgStyle = 'background: linear-gradient(135deg, #94a3b8, #475569); color: white; border-color: #475569;';
+         else if(activity.award_type === 'Gold') bgStyle = 'background: linear-gradient(135deg, #fcd34d, #f59e0b); color: white; border-color: #f59e0b;';
+         else if(activity.award_type === 'Silver') bgStyle = 'background: linear-gradient(135deg, #e2e8f0, #cbd5e1); color: #334155; border-color: #cbd5e1;';
+         else if(activity.award_type === 'Bronze') bgStyle = 'background: linear-gradient(135deg, #fdba74, #ea580c); color: white; border-color: #ea580c;';
+         else bgStyle = 'background: linear-gradient(135deg, #f59e0b, #ed8936); color: white; border-color: #ed8936;';
+         
+         awardBtnHtml = `<div class="btn-action" title="รางวัล ${activity.award_type}" style="cursor:default; ${bgStyle}"><i class="fas fa-trophy"></i></div>`;
+      } else {
+         awardBtnHtml = `<button class="btn-action" onclick="giveAward(${activity.id}, '${activity.name}')" title="ให้รางวัล Kaizen" style="background:#8b5cf6; color:white; border-color:#8b5cf6;">🏆</button>`;
+      }
+    }
+
+    return `
     <tr>
       <td style="font-weight: 600; color: #3b82f6;">${activity.name}</td>
       <td>${activity.submitter}</td>
@@ -612,16 +631,17 @@ function updateHistoryTable() {
         </span>
       </td>
       <td>${activity.approvalDate || '—'}</td>
-      <td>
-        <div style="display: flex; gap: 4px;">
+      <td style="white-space: nowrap; text-align: center;">
+        <div style="display: inline-flex; gap: 6px; align-items:center; justify-content: center;">
           <button class="btn-action primary" data-action="view-detail" data-id="${activity.id}" title="ดูรายละเอียด">👁️</button>
           ${['completed', 'rejected', 'in_progress', 'waiting_for_manager_result_approval', 'waiting_for_chairman_approval'].includes(activity.status) ?
-            `<a href="/activities/${activity.id}/report" class="btn-action warning" title="ดูรายงานผล" style="background:#f59e0b; color:white; text-decoration:none; padding:4px 8px; border-radius:6px; font-size:12px; display:inline-flex; align-items:center;">📝 </a>`
+            `<a href="/activities/${activity.id}/report" class="btn-action warning" title="ดูรายงานผล" style="background:#f59e0b; color:white; border-color:#f59e0b; text-decoration:none;">📝</a>`
             : ''}
+          ${awardBtnHtml}
         </div>
       </td>
     </tr>
-  `).join('');
+  `}).join('');
 }
 
 function filterHistory() {
@@ -639,6 +659,56 @@ function filterHistory() {
     });
 
   updateHistoryTable();
+}
+
+function giveAward(id, activityName) {
+  Swal.fire({
+    title: 'ให้รางวัล Kaizen',
+    html: `<p style="font-size:14px; color:#64748b; margin-bottom:16px;">กิจกรรม: <strong>${activityName}</strong></p>`,
+    input: 'select',
+    inputOptions: {
+      'Platinum': 'Platinum ',
+      'Gold': 'Gold ',
+      'Silver': 'Silver ',
+      'Bronze': 'Bronze '
+    },
+    inputPlaceholder: 'เลือกระดับรางวัล',
+    showCancelButton: true,
+    confirmButtonText: 'ยืนยัน',
+    cancelButtonText: 'ยกเลิก',
+    inputValidator: (value) => {
+      if (!value) {
+        return 'กรุณาเลือกระดับรางวัล';
+      }
+    }
+  }).then((result) => {
+    if (result.isConfirmed) {
+      const awardType = result.value;
+      fetch(`/activities/${id}/award`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ award_type: awardType })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire('สำเร็จ', 'บันทึกรางวัลเรียบร้อยแล้ว', 'success');
+          const idx = activitiesData.findIndex(a => a.id === id);
+          if (idx !== -1) activitiesData[idx].award_type = awardType;
+          filterHistory(); 
+        } else {
+          Swal.fire('ข้อผิดพลาด', data.message || 'เกิดข้อผิดพลาด', 'error');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+      });
+    }
+  });
 }
 
 // ---- MODALS ----

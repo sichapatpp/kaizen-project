@@ -84,7 +84,7 @@
               <th style="width: 130px;">สถานะ</th>
               <th>ประเภท</th>
               <th style="width: 120px;">ผู้ยื่น</th>
-              <th style="width: 100px;">จัดการ</th>
+              <th style="width: 120px; text-align: center;">จัดการ</th>
             </tr>
           </thead>
           <tbody id="activitiesTableBody">
@@ -393,28 +393,24 @@ function renderTable() {
           </div>
         </td>
         <td style="color:#475569;">${activity.submitter}</td>
-        <td>
-          <div class="action-buttons">
+        <td style="white-space: nowrap; text-align: center;">
+          <div style="display: inline-flex; gap: 6px; align-items:center; justify-content: center;">
             <button class="btn-action primary"
                     data-action="view-detail"
                     data-id="${activity.id}"
                     title="ดูรายละเอียด"
-                    type="button">
-              👁️
-            </button>
+                    type="button">👁️</button>
             ${hasReport && isOwner && activity.status !== 'completed'
               ? `<a href="/activities/${activity.id}/report"
                     class="btn-action warning"
                     title="กรอกรายงานผล"
-                    style="background:#f59e0b; color:white; text-decoration:none;
-                           padding:6px 12px; border-radius:6px; font-size:14px;
-                           display:inline-flex; align-items:center;">📝</a>`
+                    style="background:#f59e0b; color:white; border-color:#f59e0b; text-decoration:none;">📝</a>`
               : ''}
             ${canEdit
               ? `<a href="/activities/${activity.id}/edit"
                     class="btn-action primary"
                     title="แก้ไข"
-                    style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">✏️</a>`
+                    style="text-decoration:none;">✏️</a>`
               : ''}
           </div>
         </td>

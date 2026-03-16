@@ -92,13 +92,23 @@
                                 แสดง {{ $allActivities->count() }} รายการ
                             </p>
                         </div>
-                        <button id="resetFilterBtn"
-                            class="btn btn-sm btn-outline-secondary d-none"
-                            onclick="resetFilter()"
-                            style="border-radius:8px;">
-                            <i class="fas fa-times me-1"></i>ล้างตัวกรอง
-                        </button>
+                        <div class="d-flex gap-2">
+                            <a id="exportExcelBtn" href="#" class="btn btn-sm btn-outline-success d-none" style="border-radius:8px;">
+                                <i class="fas fa-file-excel me-1"></i>Excel
+                            </a>
+                            <a id="exportPdfBtn" href="#" class="btn btn-sm btn-outline-danger d-none" style="border-radius:8px;">
+                                <i class="fas fa-file-pdf me-1"></i>PDF
+                            </a>
+                            <button id="resetFilterBtn"
+                                class="btn btn-sm btn-outline-secondary d-none"
+                                onclick="resetFilter()"
+                                style="border-radius:8px;">
+                                <i class="fas fa-times me-1"></i>ล้างตัวกรอง
+                            </button>
+                        </div>
                     </div>
+
+                    <div id="typeSummaryContainer" class="mb-3 d-none"></div>
 
                     <div style="max-height:320px;overflow-y:auto;">
                         @if($allActivities->count() > 0)
@@ -132,51 +142,86 @@
         </div>
     </div>
 
-    {{-- ผลงาน Kaizen เด่น --}}
+    {{-- ผลงาน Kaizen เด่น (แบบตาราง) --}}
     <div class="featured-section mt-4">
-        <div class="featured-header">
-            <div class="featured-header-left">
-                <i class="fas fa-lightbulb trophy-icon"></i>
-                <h2>ผลงาน Kaizen เด่น</h2>
+        <div class="featured-header mb-3 d-flex align-items-center">
+            <div class="featured-header-left d-flex align-items-center">
+                <i class="fas fa-trophy text-warning" style="font-size: 1.5rem;"></i>
+                <h2 class="mb-0 ms-2" style="font-size: 1.25rem; font-weight: 700;">ผลงาน Kaizen เด่น</h2>
             </div>
-           <!-- <a href="#" class="view-all">ดูทั้งหมด <i class="fas fa-arrow-right"></i></a> -->
         </div>
-        <div class="project-cards">
-            @forelse($featuredProjects as $project)
-                <div class="project-card">
-                    <div class="project-card-img img-placeholder-1">
-                        <div class="bars">
-                            <div class="bar" style="height:40px"></div>
-                            <div class="bar" style="height:65px"></div>
-                            <div class="bar" style="height:90px"></div>
-                        </div>
-                    </div>
-                    <div class="project-card-body">
-                        <h3>{{ $project->title }}</h3>
-                        <div class="project-meta">
-                            <i class="fas fa-user-circle me-1"></i> ผู้ยื่น: {{ $project->user->name ?? 'ไม่ระบุ' }}
-                        </div>
-                        <div class="project-result">
-                            <span class="check-icon"><i class="fas fa-check"></i></span>
-                            {{ $project->result }}
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="empty-state" style="grid-column:1/-1;text-align:center;padding:40px 20px;">
-                    <div class="empty-icon text-muted" style="font-size:2.5rem;margin-bottom:15px;">📂</div>
-                    <div class="empty-title" style="font-size:1.1rem;font-weight:600;">ไม่มีข้อมูลกิจกรรมในปีงบประมาณนี้</div>
-                    <div class="empty-text text-muted">เมื่อมีกิจกรรมที่เสร็จสิ้นและบรรลุเป้าหมาย จะแสดงที่นี่</div>
-                </div>
-            @endforelse
+        
+        <div class="card border-0 shadow-sm" style="border-radius:14px; overflow:hidden;">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background-color: #f8fafc;">
+                        <tr>
+                            <th class="ps-4 py-3" style="font-weight: 600; color: #475569; border-bottom: 2px solid #e2e8f0; width: 45%;">ชื่อกิจกรรม Kaizen</th>
+                            <th class="py-3" style="font-weight: 600; color: #475569; border-bottom: 2px solid #e2e8f0; width: 20%;">ผู้ยื่นกิจกรรม</th>
+                            <th class="py-3" style="font-weight: 600; color: #475569; border-bottom: 2px solid #e2e8f0; width: 20%;">ระดับรางวัล</th>
+                            <th class="pe-4 py-3" style="font-weight: 600; color: #475569; border-bottom: 2px solid #e2e8f0; width: 15%;">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($featuredProjects as $project)
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <h6 class="mb-0 fw-bold" style="color: #2563eb;">{{ $project->title }}</h6>
+                                </td>
+                                <td class="py-3 text-muted" style="font-size: 0.9rem;">
+                                    <i class="fas fa-user-circle me-1"></i> {{ $project->user->name ?? 'ไม่ระบุ' }}
+                                </td>
+                                <td class="py-3">
+                                    @if($project->award_type == 'Platinum')
+                                        <span class="badge" style="background: linear-gradient(135deg, #94a3b8, #475569); color: white; border-radius: 12px; padding: 6px 12px; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            <i class="fas fa-trophy text-white"></i> Platinum
+                                        </span>
+                                    @elseif($project->award_type == 'Gold')
+                                        <span class="badge" style="background: linear-gradient(135deg, #fcd34d, #f59e0b); color: #78350f; border-radius: 12px; padding: 6px 12px; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            <i class="fas fa-trophy" style="color: #b45309;"></i> Gold
+                                        </span>
+                                    @elseif($project->award_type == 'Silver')
+                                        <span class="badge" style="background: linear-gradient(135deg, #e2e8f0, #cbd5e1); color: #334155; border-radius: 12px; padding: 6px 12px; font-size: 12px; border: 1px solid #cbd5e1;">
+                                            <i class="fas fa-trophy" style="color: #64748b;"></i> Silver
+                                        </span>
+                                    @elseif($project->award_type == 'Bronze')
+                                        <span class="badge" style="background: linear-gradient(135deg, #fdba74, #ea580c); color: white; border-radius: 12px; padding: 6px 12px; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            <i class="fas fa-trophy text-white"></i> Bronze
+                                        </span>
+                                    @elseif($project->award_type)
+                                        <span class="badge" style="background: linear-gradient(135deg, #f59e0b, #ed8936); color: white; border-radius: 12px; padding: 6px 12px; font-size: 12px;">
+                                            <i class="fas fa-trophy text-white"></i> รางวัล {{ $project->award_type }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted" style="font-size: 0.85rem;">-</span>
+                                    @endif
+                                </td>
+                                <td class="pe-4 py-3">
+                                    <span class="badge" style="background-color: #dcfce7; color: #166534; border-radius: 12px; padding: 6px 12px; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-check-circle me-1"></i> ผ่านการอนุมัติ
+                                    </span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="empty-icon text-muted" style="font-size:3rem;margin-bottom:15px; opacity: 0.3;"><i class="fas fa-award"></i></div>
+                                    <div class="empty-title" style="font-size:1.1rem;font-weight:600;color:#475569;">ไม่มีข้อมูลผลงานเด่นที่ได้รับรางวัลในปีงบประมาณนี้</div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-    const typeCounts   = @json($typeCounts);
-    const typeProjects = @json($typeProjects);
-    const selectedYear = {{ $selectedYear }};
+    const typeCounts    = @json($typeCounts);
+    const typeProjects  = @json($typeProjects);
+    const typeSummaries = @json($typeSummaries ?? []);
+    const selectedYear  = {{ $selectedYear }};
 
     const chartLabels = Object.keys(typeCounts);
     const chartData   = Object.values(typeCounts);
@@ -242,12 +287,52 @@
         const title    = document.getElementById('activityListTitle');
         const subtitle = document.getElementById('activityListSubtitle');
         const resetBtn = document.getElementById('resetFilterBtn');
+        const summaryContainer = document.getElementById('typeSummaryContainer');
 
         if (!originalRows) originalRows = tbody.innerHTML;
 
         title.textContent    = `ประเภท: ${typeName}`;
         subtitle.textContent = `แสดง ${projects.length} รายการ`;
         resetBtn.classList.remove('d-none');
+
+        const excelBtn = document.getElementById('exportExcelBtn');
+        const pdfBtn = document.getElementById('exportPdfBtn');
+        excelBtn.href = `/dashboard/export/excel?year=${selectedYear}&type=${encodeURIComponent(typeName)}`;
+        pdfBtn.href = `/dashboard/export/pdf?year=${selectedYear}&type=${encodeURIComponent(typeName)}`;
+        excelBtn.classList.remove('d-none');
+        pdfBtn.classList.remove('d-none');
+
+        const summaryTypes = ['ลดขั้นตอน', 'ลดรายจ่าย', 'เพิ่มรายได้', 'ลดเวลาทำงาน', 'ลดเวลาการทำงาน'];
+        if (summaryTypes.includes(typeName) && typeSummaries[typeName]) {
+            const summary = typeSummaries[typeName];
+            const formatNumber = (num) => new Intl.NumberFormat('th-TH', { maximumFractionDigits: 2 }).format(num || 0);
+            
+            summaryContainer.innerHTML = `
+                <div class="row g-2 text-center text-secondary small">
+                    <div class="col-4">
+                        <div class="p-2 border rounded bg-light">
+                            <div class="fw-bold text-muted">ก่อน</div>
+                            <div class="fw-bold text-dark" style="font-size:1.1rem;">${formatNumber(summary.before)}</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 border rounded bg-light">
+                            <div class="fw-bold text-muted">หลัง</div>
+                            <div class="fw-bold text-dark" style="font-size:1.1rem;">${formatNumber(summary.after)}</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 border rounded bg-light" style="border-color:#b8daff!important; background-color:#f8f9fa;">
+                            <div class="fw-bold text-primary">ผลต่าง</div>
+                            <div class="fw-bold text-primary" style="font-size:1.1rem;">${formatNumber(summary.net)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            summaryContainer.classList.remove('d-none');
+        } else {
+            summaryContainer.classList.add('d-none');
+        }
 
         if (projects.length === 0) {
             tbody.innerHTML = `
@@ -269,11 +354,15 @@
         const title    = document.getElementById('activityListTitle');
         const subtitle = document.getElementById('activityListSubtitle');
         const resetBtn = document.getElementById('resetFilterBtn');
+        const summaryContainer = document.getElementById('typeSummaryContainer');
 
         if (originalRows) tbody.innerHTML = originalRows;
         title.textContent    = `กิจกรรมทั้งหมด ปีงบประมาณ ${selectedYear}`;
         subtitle.textContent = `แสดง {{ $allActivities->count() }} รายการ`;
         resetBtn.classList.add('d-none');
+        document.getElementById('exportExcelBtn').classList.add('d-none');
+        document.getElementById('exportPdfBtn').classList.add('d-none');
+        if (summaryContainer) summaryContainer.classList.add('d-none');
         originalRows = null;
     }
     </script>
