@@ -22,6 +22,7 @@
 
         <a href="{{ route('activities.approve') }}" class="sidebar-item {{ request()->routeIs('activities.approve') ? 'active' : '' }}">
             <i class="fas fa-trophy si-icon"></i> อนุมัติและรายงาน
+        
         </a>
    
     @if(auth()->check() && auth()->user()?->role?->role_name === 'admin')
@@ -34,6 +35,14 @@
         <a href="{{ route('user.index') }}" class="sidebar-item {{ request()->routeIs('user.*') ? 'active' : '' }}">
             <i class="fas fa-users si-icon"></i> จัดการผู้ใช้
         </a>
+
+        
     @endif
- 
+        
+<hr>
+        <a href="{{ asset('manual/คู่มือการใช้งานการพัฒนาระบบบริหารจัดการปรับปรุงงาน (Kaizen).pdf') }}" class="sidebar-item" target="_blank" 
+    rel="noopener noreferrer">
+    <i class="fas fa-file-pdf si-icon"></i> คู่มือการใช้งาน
+    </a>
+    
   </aside> 
