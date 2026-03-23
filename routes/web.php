@@ -75,11 +75,13 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('roles', RoleController::class);
             Route::resource('user', UserController::class);
             Route::post('user/{id}/toggle-status', [UserController::class , 'toggleStatus'])->name('user.toggle-status');
-        }
-        );
+        });
+
+        Route::delete('/activities/files/{id}', [KaizenController::class, 'deleteFile'])->name('activities.deleteFile');
         
     });
-     Route::get('/send-mail', function () {
+
+    Route::get('/send-mail', function () {
     // ใส่อีเมลปลายทางที่คุณต้องการส่งไปหา
     Mail::to('sichapatsuckvichai@gmail.com')->send(new TestEmail());
 

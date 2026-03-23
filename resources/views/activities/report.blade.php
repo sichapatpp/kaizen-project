@@ -21,6 +21,7 @@
         'new_service'      => 'เปิดบริการใหม่',
         'others'           => 'อื่นๆ (ระบุเอง)',
     ];
+    $textIndicatorTypesPhp = ['ปรับปรุงคุณภาพ', 'รักษาภาพลักษณ์/ชื่อเสียงองค์กร', 'สิ่งประดิษฐ์/นวัตกรรม', 'เปิดบริการใหม่'];
     $types = (array) $kaizen->improvement_types;
 @endphp
 
@@ -127,8 +128,44 @@
                                             @endif
                                         @endif
                                     </div>
-                                    <input type="number" step="any" name="indicators[{{ $index }}][before_value]" value="{{ $ind->before_value }}" placeholder="0" class="input-styled val-before" oninput="calculateDiff(this)" {{ $readOnly ? 'disabled' : '' }}>
-                                    <input type="number" step="any" name="indicators[{{ $index }}][after_value]" value="{{ $ind->after_value }}" placeholder="0" class="input-styled val-after" oninput="calculateDiff(this)" {{ $readOnly ? 'disabled' : '' }}>
+                                    <div class="val-before-container">
+                                        @if($ind->indicator_name === 'ลดความเสี่ยง')
+                                            <div style="display:flex; align-items:center; gap:5px;">
+                                                <select name="indicators[{{ $index }}][before_value]" class="input-styled val-before" {{ $readOnly ? 'disabled' : '' }}>
+                                                    <option value="">-- เลือก --</option>
+                                                    @foreach(['Low', 'Medium', 'High', 'Extreme'] as $opt)
+                                                        <option value="{{ $opt }}" {{ $ind->before_value === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <button type="button" class="btn-risk-info" data-bs-toggle="modal" data-bs-target="#riskMatrixModal" title="ดูเกณฑ์ความเสี่ยง">
+                                                    <i class="fas fa-question-circle"></i>
+                                                </button>
+                                            </div>
+                                        @elseif(in_array($ind->indicator_name, $textIndicatorTypesPhp))
+                                            <input type="text" name="indicators[{{ $index }}][before_value]" value="{{ $ind->before_value }}" class="input-styled val-before" {{ $readOnly ? 'disabled' : '' }}>
+                                        @else
+                                            <input type="number" step="any" name="indicators[{{ $index }}][before_value]" value="{{ $ind->before_value }}" placeholder="0" class="input-styled val-before" oninput="calculateDiff(this)" {{ $readOnly ? 'disabled' : '' }}>
+                                        @endif
+                                    </div>
+                                    <div class="val-after-container">
+                                        @if($ind->indicator_name === 'ลดความเสี่ยง')
+                                            <div style="display:flex; align-items:center; gap:5px;">
+                                                <select name="indicators[{{ $index }}][after_value]" class="input-styled val-after" {{ $readOnly ? 'disabled' : '' }}>
+                                                    <option value="">-- เลือก --</option>
+                                                    @foreach(['Low', 'Medium', 'High', 'Extreme'] as $opt)
+                                                        <option value="{{ $opt }}" {{ $ind->after_value === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <button type="button" class="btn-risk-info" data-bs-toggle="modal" data-bs-target="#riskMatrixModal" title="ดูเกณฑ์ความเสี่ยง">
+                                                    <i class="fas fa-question-circle"></i>
+                                                </button>
+                                            </div>
+                                        @elseif(in_array($ind->indicator_name, $textIndicatorTypesPhp))
+                                            <input type="text" name="indicators[{{ $index }}][after_value]" value="{{ $ind->after_value }}" class="input-styled val-after" {{ $readOnly ? 'disabled' : '' }}>
+                                        @else
+                                            <input type="number" step="any" name="indicators[{{ $index }}][after_value]" value="{{ $ind->after_value }}" placeholder="0" class="input-styled val-after" oninput="calculateDiff(this)" {{ $readOnly ? 'disabled' : '' }}>
+                                        @endif
+                                    </div>
                                     
                                     <div class="diff-display" style="text-align:center; font-weight:bold; font-size:13px; color:#64748b;">-</div>
                                     
@@ -175,14 +212,20 @@
                     <label style="display: block; font-weight: 600; font-size: 14px; margin-bottom: 12px;">รูปภาพประกอบผลงาน (Result Images)</label>
                     @if(!$readOnly)
                     <div class="upload-zone" onclick="document.getElementById('file-result').click()" style="border: 2px dashed #e2e8f0; border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.2s;">
-                        <input type="file" id="file-result" name="result_images[]" multiple accept="image/*" onchange="previewFiles(this,'preview-result')" style="display:none;" />
+                        <input type="file" id="file-result" name="result_images[]" multiple accept="image/*" onchange="handleFileSelect(this,'preview-result', 'actual')" style="display:none;" />
                         <div style="color: #64748b; font-size: 14px;">📷 คลิกเพื่อแนบรูปภาพผลลัพธ์</div>
                     </div>
                     @endif
-                    <div class="file-previews" id="preview-result" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px;">
-                        @foreach($kaizen->files->where('file_type', 'actual') as $file)
-                            <img src="{{ asset('storage/' . $file->file_path) }}" style="width:100px; height:100px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0;">
-                        @endforeach
+                    <div class="file-previews" id="preview-result">
+                        {{-- Existing Files --}}
+                        @if(isset($kaizen))
+                            @foreach($kaizen->files->where('file_type', 'actual') as $file)
+                                <div class="preview-item existing" id="file-{{ $file->id }}">
+                                    <img src="{{ asset('storage/' . $file->file_path) }}">
+                                    <button type="button" class="btn-remove" onclick="deleteExistingFile({{ $file->id }}, 'file-{{ $file->id }}')">✕</button>
+                                </div>
+                            @endforeach
+                        @endif
                     </div>
                 </div>
 
@@ -198,6 +241,21 @@
     </div>
 </div>
 
+<!-- Risk Matrix Modal -->
+<div class="modal fade" id="riskMatrixModal" tabindex="-1" aria-labelledby="riskMatrixModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+            <div class="modal-header" style="border-bottom: 1px solid #f1f5f9; padding: 16px 20px;">
+                <h5 class="modal-title" id="riskMatrixModalLabel" style="font-weight: 600; color: #1e293b;">เกณฑ์การประเมินความเสี่ยง</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 20px; background: #fff;">
+                <img src="{{ asset('images/risk-matrix.jpg') }}" alt="Risk Matrix Table" class="img-fluid w-100" style="border-radius: 8px;">
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .input-styled { width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; transition: all 0.2s; background: #fff; color: #334155; }
     .input-styled:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); outline: none; }
@@ -209,7 +267,17 @@
     .diff-positive { color: #10b981 !important; } 
     .diff-negative { color: #ef4444 !important; } 
     
+    
     .upload-zone:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+    .btn-risk-info { background: #f1f5f9; border: 1px solid #e2e8f0; color: #64748b; border-radius: 6px; width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; cursor: pointer; }
+    .btn-risk-info:hover { background: #e2e8f0; color: #334155; }
+
+    .file-previews { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .preview-item { position: relative; width: 100px; height: 100px; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-item .btn-remove { position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; transition: all 0.2s; z-index: 10; }
+    .preview-item .btn-remove:hover { background: #dc2626; transform: scale(1.1); }
 </style>
 
 <script>
@@ -222,12 +290,19 @@ const indicatorOptions = [
 let rowIdx = {{ count($displayIndicators) }};
 
 const textIndicatorTypes = ['ปรับปรุงคุณภาพ', 'รักษาภาพลักษณ์/ชื่อเสียงองค์กร', 'สิ่งประดิษฐ์/นวัตกรรม', 'เปิดบริการใหม่'];
+const riskOptions = ['Low', 'Medium', 'High', 'Extreme'];
 
 function calculateDiff(input) {
     const row = input.closest('.indicator-row');
     const beforeInput = row.querySelector('.val-before');
     const afterInput = row.querySelector('.val-after');
     const display = row.querySelector('.diff-display');
+
+    if (!beforeInput || !afterInput || beforeInput.tagName === 'SELECT') {
+        display.innerText = '-';
+        display.classList.remove('diff-positive', 'diff-negative');
+        return;
+    }
 
     if (beforeInput.type === 'text') {
         display.innerText = '-';
@@ -256,19 +331,46 @@ function updateIndicatorInputTypes(row) {
     
     if (!indicatorName) return;
 
-    const beforeInput = row.querySelector('.val-before');
-    const afterInput = row.querySelector('.val-after');
+    const beforeContainer = row.querySelector('.val-before-container');
+    const afterContainer = row.querySelector('.val-after-container');
     const display = row.querySelector('.diff-display');
-    
-    if (textIndicatorTypes.includes(indicatorName)) {
-        beforeInput.type = 'text';
-        afterInput.type = 'text';
+
+    const beforeVal = row.querySelector('.val-before')?.value || '';
+    const afterVal = row.querySelector('.val-after')?.value || '';
+    const readOnly = @json($readOnly);
+    const namePrefix = select ? select.name.replace('[indicator_name]', '') : row.querySelector('input[name*="[indicator_name]"]')?.name.replace('[indicator_name]', '');
+
+    if (indicatorName === 'ลดความเสี่ยง') {
+        const riskBtn = `<button type="button" class="btn-risk-info" data-bs-toggle="modal" data-bs-target="#riskMatrixModal" title="ดูเกณฑ์ความเสี่ยง">
+                            <i class="fas fa-question-circle"></i>
+                        </button>`;
+        beforeContainer.innerHTML = `
+            <div style="display:flex; align-items:center; gap:5px;">
+                <select name="${namePrefix}[before_value]" class="input-styled val-before" ${readOnly ? 'disabled' : ''}>
+                    <option value="">-- เลือก --</option>
+                    ${riskOptions.map(opt => `<option value="${opt}" ${beforeVal === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                </select>
+                ${riskBtn}
+            </div>`;
+        afterContainer.innerHTML = `
+            <div style="display:flex; align-items:center; gap:5px;">
+                <select name="${namePrefix}[after_value]" class="input-styled val-after" ${readOnly ? 'disabled' : ''}>
+                    <option value="">-- เลือก --</option>
+                    ${riskOptions.map(opt => `<option value="${opt}" ${afterVal === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                </select>
+                ${riskBtn}
+            </div>`;
+        display.innerText = '-';
+        display.classList.remove('diff-positive', 'diff-negative');
+    } else if (textIndicatorTypes.includes(indicatorName)) {
+        beforeContainer.innerHTML = `<input type="text" name="${namePrefix}[before_value]" value="${beforeVal}" class="input-styled val-before" ${readOnly ? 'disabled' : ''}>`;
+        afterContainer.innerHTML = `<input type="text" name="${namePrefix}[after_value]" value="${afterVal}" class="input-styled val-after" ${readOnly ? 'disabled' : ''}>`;
         display.innerText = '-';
         display.classList.remove('diff-positive', 'diff-negative');
     } else {
-        beforeInput.type = 'number';
-        afterInput.type = 'number';
-        calculateDiff(beforeInput);
+        beforeContainer.innerHTML = `<input type="number" step="any" name="${namePrefix}[before_value]" value="${beforeVal}" placeholder="0" class="input-styled val-before" oninput="calculateDiff(this)" ${readOnly ? 'disabled' : ''}>`;
+        afterContainer.innerHTML = `<input type="number" step="any" name="${namePrefix}[after_value]" value="${afterVal}" placeholder="0" class="input-styled val-after" oninput="calculateDiff(this)" ${readOnly ? 'disabled' : ''}>`;
+        calculateDiff(row.querySelector('.val-before'));
     }
 }
 
@@ -299,8 +401,12 @@ function addIndicator() {
                 ${indicatorOptions.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
             </select>
         </div>
-        <input type="number" step="any" name="indicators[${rowIdx}][before_value]" placeholder="0" class="input-styled val-before" oninput="calculateDiff(this)">
-        <input type="number" step="any" name="indicators[${rowIdx}][after_value]" placeholder="0" class="input-styled val-after" oninput="calculateDiff(this)">
+        <div class="val-before-container">
+            <input type="number" step="any" name="indicators[${rowIdx}][before_value]" placeholder="0" class="input-styled val-before" oninput="calculateDiff(this)">
+        </div>
+        <div class="val-after-container">
+            <input type="number" step="any" name="indicators[${rowIdx}][after_value]" placeholder="0" class="input-styled val-after" oninput="calculateDiff(this)">
+        </div>
         <div class="diff-display" style="text-align:center; font-weight:bold; font-size:13px; color:#64748b;">-</div>
         <input type="text" name="indicators[${rowIdx}][unit]" placeholder="หน่วย" class="input-styled">
         <button type="button" onclick="removeIndicator(this)" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:16px;">✕</button>
@@ -332,18 +438,90 @@ function toggleNotAchieved(show) {
     document.getElementById('not_achieved_wrapper').style.display = show ? 'block' : 'none'; 
 }
 
-function previewFiles(input, containerId) {
+let fileStore = {
+    actual: []
+};
+
+function handleFileSelect(input, containerId, type) {
+    const files = Array.from(input.files);
+    fileStore[type] = fileStore[type].concat(files);
+    renderPreviews(containerId, type);
+    input.value = '';
+}
+
+function renderPreviews(containerId, type) {
+    // We only want to clear and re-render the NEW previews
+    // But they are mixed with existing ones in the same container.
+    // Let's modify: separate existing and new previews or handle them carefully.
+    
+    // Simpler: Keep existing ones as they are, and re-render only new ones in a sub-container
+    // OR just re-render everything if we can.
+    
+    // Let's use a "new-previews" container or just find existing ones.
     const container = document.getElementById(containerId);
-    Array.from(input.files).forEach(file => {
+    
+    // Remove all NON-existing previews
+    const newItems = container.querySelectorAll('.preview-item:not(.existing)');
+    newItems.forEach(item => item.remove());
+    
+    fileStore[type].forEach((file, index) => {
         const reader = new FileReader();
-        reader.onload = e => {
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.style = "width:100px; height:100px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0;";
-            container.appendChild(img);
+        reader.onload = function (e) {
+            const div = document.createElement('div');
+            div.className = 'preview-item';
+            div.innerHTML = `
+                <img src="${e.target.result}">
+                <button type="button" class="btn-remove" onclick="removeFile('${type}', ${index}, '${containerId}')">✕</button>
+            `;
+            container.appendChild(div);
         };
         reader.readAsDataURL(file);
     });
+}
+
+function removeFile(type, index, containerId) {
+    fileStore[type].splice(index, 1);
+    renderPreviews(containerId, type);
+}
+
+function deleteExistingFile(fileId, elementId) {
+    if (!confirm('ยืนยันลบรูปภาพนี้จากฐานข้อมูล?')) return;
+    
+    fetch(`/activities/files/${fileId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById(elementId).remove();
+        } else {
+            alert('ลบไม่สำเร็จ: ' + data.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+    });
+}
+
+// Add event listener to form to sync files before submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    const input = document.getElementById('file-result');
+    if (input && fileStore.actual.length > 0) {
+        const dt = new DataTransfer();
+        fileStore.actual.forEach(file => dt.items.add(file));
+        input.files = dt.files;
+    }
+});
+
+function previewFiles(input, containerId) {
+    // Legacy
+    handleFileSelect(input, containerId, 'actual');
 }
 
 document.addEventListener('DOMContentLoaded', () => {

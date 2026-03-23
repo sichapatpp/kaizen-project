@@ -34,11 +34,13 @@
                 <i class="fas fa-plus-circle nav-icon"></i> สร้างกิจกรรม
             </a>
             <a href={{ route('activities.status') }} class="nav-link">
-                <i class="fas fa-list nav-icon"></i> ติดตามสถานะ
+               <i class="fas fa-list-alt si-icon"></i> ติดตามสถานะ
             </a>
-            <a href={{ route('activities.approve') }} class="nav-link">
-                <i class="fas fa-list nav-icon"></i> อนุมัติและรายงาน
-            </a>
+           @if(auth()->check() && auth()->user()?->role?->role_name !== 'user')
+     <a href="{{ route('activities.approve') }}" class="sidebar-item {{ request()->routeIs('activities.approve') ? 'active' : '' }}">
+         <i class="fas fa-trophy si-icon"></i> อนุมัติและรายงาน
+     </a>
+     @endif
         </nav>
 
         <div class="topbar-right align-items-center d-flex gap-3">
@@ -139,7 +141,7 @@
                                     const kaizenUrl = notification.kaizen_project_id ? `/activities/show/${notification.kaizen_project_id}` : '/activities/status';
 
                                     const li = `
-                                        <li class="p-3 border-bottom notification-item ${bgColor}" data-id="${notification.id}" data-url="${kaizenUrl}" style="cursor: pointer;">
+                                        <li class="p-3 border-bottom notification-item ${bgColor}" data-id="${notification.id}" data-url="${kaizenUrl}">
                                             <div class="d-flex w-100 justify-content-between">
                                                 <h6 class="mb-1 ${textClass}" style="font-size: 0.85rem;">${notification.title}</h6>
                                                 <small class="text-muted" style="font-size: 0.75rem;">${notification.created_at}</small>
@@ -166,7 +168,6 @@
             // Mark single notification as read
             $(document).on('click', '.notification-item', function() {
                 const id = $(this).data('id');
-                const targetUrl = $(this).data('url');
                 $.ajax({
                     url: `/notifications/${id}/read`,
                     method: 'POST',
@@ -174,11 +175,7 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function() {
-                        if (targetUrl) {
-                            window.location.href = targetUrl;
-                        } else {
-                            fetchNotifications();
-                        }
+                        fetchNotifications();
                     }
                 });
             });

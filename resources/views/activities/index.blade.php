@@ -31,6 +31,11 @@
     @-webkit-keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0;    opacity: 0; } }
     @keyframes fadein  { from { bottom: 0;    opacity: 0; } to { bottom: 30px; opacity: 1; } }
     @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0;    opacity: 0; } }
+    .file-previews { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .preview-item { position: relative; width: 100px; height: 100px; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-item .btn-remove { position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; transition: all 0.2s; }
+    .preview-item .btn-remove:hover { background: #dc2626; transform: scale(1.1); }
 @endverbatim
 </style>
 
@@ -188,12 +193,22 @@
                     </div>
                     <div class="upload-zone" onclick="document.getElementById('file-problem').click()">
                         <input type="file" id="file-problem" name="problem_images[]" multiple accept="image/*"
-                               onchange="previewFiles(this,'preview-problem')" style="display:none;" />
+                               onchange="handleFileSelect(this,'preview-problem', 'problem')" style="display:none;" />
                         <div class="upload-icon">📷</div>
                         <div class="upload-text"><span>คลิกเพื่อแนบรูปภาพ</span> หรือลากมาวาง</div>
                         <div class="upload-sub">รับ JPG, PNG, WEBP (ไม่เกิน 5 MB / ต่อรูป)</div>
                     </div>
-                    <div class="file-previews" id="preview-problem"></div>
+                    <div class="file-previews" id="preview-problem">
+                        @if(isset($kaizen) || isset($draft))
+                            @php $proj = $kaizen ?? $draft; @endphp
+                            @foreach($proj->files->where('file_type', 'problem') as $file)
+                                <div class="preview-item existing" id="file-{{ $file->id }}">
+                                    <img src="{{ asset('storage/' . $file->file_path) }}">
+                                    <button type="button" class="btn-remove" onclick="deleteExistingFile({{ $file->id }}, 'file-{{ $file->id }}')">✕</button>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
                     <div class="sample-img-note">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -215,12 +230,22 @@
                     </div>
                     <div class="upload-zone" onclick="document.getElementById('file-solution').click()">
                         <input type="file" id="file-solution" name="solution_images[]" multiple accept="image/*"
-                               onchange="previewFiles(this,'preview-solution')" style="display:none;" />
+                               onchange="handleFileSelect(this,'preview-solution', 'solution')" style="display:none;" />
                         <div class="upload-icon">📷</div>
                         <div class="upload-text"><span>คลิกเพื่อแนบรูปภาพ</span> หรือลากมาวาง</div>
                         <div class="upload-sub">รับ JPG, PNG, WEBP (ไม่เกิน 5 MB / ต่อรูป)</div>
                     </div>
-                    <div class="file-previews" id="preview-solution"></div>
+                    <div class="file-previews" id="preview-solution">
+                        @if(isset($kaizen) || isset($draft))
+                            @php $proj = $kaizen ?? $draft; @endphp
+                            @foreach($proj->files->where('file_type', 'solution') as $file)
+                                <div class="preview-item existing" id="file-{{ $file->id }}">
+                                    <img src="{{ asset('storage/' . $file->file_path) }}">
+                                    <button type="button" class="btn-remove" onclick="deleteExistingFile({{ $file->id }}, 'file-{{ $file->id }}')">✕</button>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
                     <div class="sample-img-note">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -242,12 +267,22 @@
                     </div>
                     <div class="upload-zone" onclick="document.getElementById('file-result').click()">
                         <input type="file" id="file-result" name="result_images[]" multiple accept="image/*"
-                               onchange="previewFiles(this,'preview-result')" style="display:none;" />
+                               onchange="handleFileSelect(this,'preview-result', 'result')" style="display:none;" />
                         <div class="upload-icon">📷</div>
                         <div class="upload-text"><span>คลิกเพื่อแนบรูปภาพ</span> หรือลากมาวาง</div>
                         <div class="upload-sub">รับ JPG, PNG, WEBP (ไม่เกิน 5 MB / ต่อรูป)</div>
                     </div>
-                    <div class="file-previews" id="preview-result"></div>
+                    <div class="file-previews" id="preview-result">
+                        @if(isset($kaizen) || isset($draft))
+                            @php $proj = $kaizen ?? $draft; @endphp
+                            @foreach($proj->files->where('file_type', 'result') as $file)
+                                <div class="preview-item existing" id="file-{{ $file->id }}">
+                                    <img src="{{ asset('storage/' . $file->file_path) }}">
+                                    <button type="button" class="btn-remove" onclick="deleteExistingFile({{ $file->id }}, 'file-{{ $file->id }}')">✕</button>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
                     <div class="sample-img-note">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -347,7 +382,7 @@
                         <div><button type="button" class="btn-back" onclick="goStep(3)">‹ ย้อนกลับ</button></div>
                         <div class="step-info">ขั้นตอน 4 จาก 4</div>
                         <div>
-                            <button type="submit" class="btn-next"
+                            <button type="submit" class="btn-next" onclick="prepareUploads(event)"
                                     style="background:#22c55e; box-shadow:0 2px 6px rgba(34,197,94,.35);">
                                 บันทึกกิจกรรม <span>›</span>
                             </button>
@@ -579,8 +614,60 @@
         }
 
         // ─── Preview รูปภาพ ───
+        let fileStore = {
+            problem: [],
+            solution: [],
+            result: []
+        };
+
+        function handleFileSelect(input, containerId, type) {
+            const files = Array.from(input.files);
+            fileStore[type] = fileStore[type].concat(files);
+            renderPreviews(containerId, type);
+            // Clear input so same file can be selected again
+            input.value = '';
+        }
+
+        function renderPreviews(containerId, type) {
+            const container = document.getElementById(containerId);
+            // Remove non-existing (newly added) previews
+            const newItems = container.querySelectorAll('.preview-item:not(.existing)');
+            newItems.forEach(item => item.remove());
+            
+            fileStore[type].forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const div = document.createElement('div');
+                    div.className = 'preview-item';
+                    div.innerHTML = `
+                        <img src="${e.target.result}">
+                        <button type="button" class="btn-remove" onclick="removeFile('${type}', ${index}, '${containerId}')">✕</button>
+                    `;
+                    container.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removeFile(type, index, containerId) {
+            fileStore[type].splice(index, 1);
+            renderPreviews(containerId, type);
+        }
+
+        function prepareUploads(event) {
+            // For standard submission
+            const types = ['problem', 'solution', 'result'];
+            types.forEach(type => {
+                const input = document.getElementById('file-' + type);
+                const dt = new DataTransfer();
+                fileStore[type].forEach(file => dt.items.add(file));
+                input.files = dt.files;
+            });
+        }
+
         function previewFiles(input, containerId) {
-            var container = document.getElementById(containerId);
+            // Legacy for compatibility if called elsewhere
+            const container = document.getElementById(containerId);
             container.innerHTML = '';
             Array.from(input.files).forEach(function (file) {
                 var reader = new FileReader();
@@ -629,6 +716,10 @@
             .then(function (data) {
                 if (data.success) {
                     if (data.draft_id) document.getElementById('draft_id').value = data.draft_id;
+                    
+                    // อัปโหลดไฟล์ที่เลือกค้างไว้ (ถ้ามี)
+                    uploadDraftFilesSequentially(data.draft_id);
+                    
                     fetchDraftCount();
                     showToast('บันทึกฉบับร่างแล้ว');
                 } else {
@@ -638,6 +729,54 @@
             .catch(function () { showToast('เกิดข้อผิดพลาด โปรดลองใหม่'); })
             .finally(function () {
                 if (btn) { btn.disabled = false; btn.textContent = originalText; }
+            });
+        }
+
+        async function uploadDraftFilesSequentially(draftId) {
+            const types = ['problem', 'solution', 'result'];
+            for (const type of types) {
+                if (fileStore[type].length > 0) {
+                    const formData = new FormData();
+                    formData.append('file_type', type);
+                    fileStore[type].forEach(file => formData.append('images[]', file));
+
+                    try {
+                        let response = await fetch(`/activities/draft/${draftId}/upload-files`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: formData
+                        });
+                        let result = await response.json();
+                        if (result.success) {
+                            // Clear fileStore for this type since it's uploaded
+                            fileStore[type] = [];
+                            // Move from "new" to "existing" in UI without full reload? 
+                            // Easier to just keep them as "uploaded" or wait for next load.
+                            // For now, let's just clear them and let user know they are saved.
+                            renderPreviews('preview-' + type, type);
+                            // To actually show them as "existing", we'd need their IDs from server.
+                            // But since this is a draft, we can just leave it as is or reload.
+                        }
+                    } catch (e) { console.error('Upload failed for ' + type, e); }
+                }
+            }
+        }
+
+        function deleteExistingFile(fileId, elementId) {
+            if (!confirm('ยืนยันลบรูปภาพนี้จากโปรเจกต์?')) return;
+            fetch(`/activities/files/${fileId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById(elementId).remove();
+                }
             });
         }
 

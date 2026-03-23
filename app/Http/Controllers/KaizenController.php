@@ -183,17 +183,6 @@ class KaizenController extends Controller
 
         $fileType = $request->input('file_type');
 
-        // ลบรูปเก่าชุดนี้ก่อน แล้วอัปใหม่
-        $oldFiles = KaizenFile::where('kaizen_project_id', $kaizen->id)
-            ->where('file_type', $fileType)
-            ->get();
-        foreach ($oldFiles as $old) {
-            Storage::disk('public')->delete($old->file_path);
-        }
-        KaizenFile::where('kaizen_project_id', $kaizen->id)
-            ->where('file_type', $fileType)
-            ->delete();
-
         $uploaded = [];
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
@@ -423,9 +412,8 @@ class KaizenController extends Controller
             }
         }
 
-        // ลบรูปเก่าและอัปรูปใหม่ไม่ให้รูปขยะค้าง Server
-        // ใช้ชื่อ type ว่า actual จะได้ไม่ไปทับกับรูปภาพผลที่คาดว่าจะได้รับ (result)
-        $this->replaceFiles($request, 'result_images', $kaizen->id, 'actual');
+        // อัปรูปใหม่เพิ่มเติม
+        $this->uploadFiles($request, 'result_images', $kaizen->id, 'actual');
 
         return redirect()->route('activities.status')
             ->with('success', 'บันทึกผลการดำเนินงานและส่งอนุมัติเรียบร้อยแล้ว');
@@ -509,18 +497,10 @@ class KaizenController extends Controller
             }
         }
 
-        // แก้ไข record เดิม → ลบรูปเก่าแล้วอัปใหม่ (replaceFiles)
-        // สร้างใหม่ → append ได้เลย (uploadFiles)
-        if ($draftId && isset($kaizen)) {
-            $this->replaceFiles($request, 'problem_images', $kaizen->id, 'problem');
-            $this->replaceFiles($request, 'solution_images', $kaizen->id, 'solution');
-            $this->replaceFiles($request, 'result_images', $kaizen->id, 'result');
-        }
-        else {
-            $this->uploadFiles($request, 'problem_images', $kaizen->id, 'problem');
-            $this->uploadFiles($request, 'solution_images', $kaizen->id, 'solution');
-            $this->uploadFiles($request, 'result_images', $kaizen->id, 'result');
-        }
+        // อัปรูปใหม่เพิ่มเติม (Append)
+        $this->uploadFiles($request, 'problem_images', $kaizen->id, 'problem');
+        $this->uploadFiles($request, 'solution_images', $kaizen->id, 'solution');
+        $this->uploadFiles($request, 'result_images', $kaizen->id, 'result');
 
         return redirect()
             ->route('activities.status')
@@ -750,40 +730,6 @@ class KaizenController extends Controller
     }
 
     /**
-     * อัปโหลดไฟล์ใหม่ โดย **ลบไฟล์เก่า** (ทั้ง Storage และ DB) ก่อนเสมอ
-     * ใช้เมื่อต้องการ "แทนที่" รูปชุดเดิมทั้งหมด เช่น saveReport / store
-     */
-    private function replaceFiles(Request $request, $inputName, $kaizenId, $fileType)
-    {
-        if (!$request->hasFile($inputName)) {
-            return; // ไม่ได้อัปโหลดรูปใหม่ → คงรูปเก่าไว้
-        }
-
-        // ลบไฟล์เก่าใน Storage + DB
-        $oldFiles = KaizenFile::where('kaizen_project_id', $kaizenId)
-            ->where('file_type', $fileType)
-            ->get();
-
-        foreach ($oldFiles as $old) {
-            Storage::disk('public')->delete($old->file_path);
-        }
-        KaizenFile::where('kaizen_project_id', $kaizenId)
-            ->where('file_type', $fileType)
-            ->delete();
-
-        // อัปโหลดรูปใหม่
-        $files = $request->file($inputName);
-        if (is_array($files)) {
-            foreach ($files as $file) {
-                $this->saveFileToDB($file, $kaizenId, $fileType);
-            }
-        }
-        else {
-            $this->saveFileToDB($files, $kaizenId, $fileType);
-        }
-    }
-
-    /**
      * อัปโหลดไฟล์ใหม่ **เพิ่มเติม** โดยไม่ลบเก่า
      * ใช้กรณีที่ต้องการ append เช่น ครั้งแรกที่สร้าง (ยังไม่มีรูปเก่า)
      */
@@ -815,5 +761,24 @@ class KaizenController extends Controller
             'file_type' => $fileType,
             'user_id' => auth()->id(),
         ]);
+    }
+    public function deleteFile($id)
+    {
+        try {
+            $file = KaizenFile::findOrFail($id);
+            
+            // ตรวจสอบสิทธิ์ (เจ้าของกิจกรรม หรือ Admin/Manager?)
+            $kaizen = $file->kaizenProject;
+            if ($kaizen->user_id !== auth()->id() && !auth()->user()->role->role_name === 'admin') {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            Storage::disk('public')->delete($file->file_path);
+            $file->delete();
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }
