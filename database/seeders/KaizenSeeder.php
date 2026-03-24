@@ -84,15 +84,15 @@ class KaizenSeeder extends Seeder
         );
 
         // 3. Create Sample Project
-        $user = User::where('email', 'user@kaizen.com')->first();
-        \App\Models\KaizenProject::create([
-            'fiscalyear' => date('Y') + 543,
-            'title' => 'ลดขั้นตอนการเบิกจ่าย',
-            'problem' => 'ขั้นตอนซับซ้อน ใช้เวลานาน',
-            'improvement' => 'ใช้ระบบออนไลน์แทนกระดาษ',
-            'result' => 'ลดเวลาได้ 50%',
-            'user_id' => $user->id,
-            'status' => 'pending',
-        ]);
+        // $user = User::where('email', 'user@kaizen.com')->first();
+        // \App\Models\KaizenProject::create([
+        //     'fiscalyear' => date('Y') + 543,
+        //     'title' => 'ลดขั้นตอนการเบิกจ่าย',
+        //     'problem' => 'ขั้นตอนซับซ้อน ใช้เวลานาน',
+        //     'improvement' => 'ใช้ระบบออนไลน์แทนกระดาษ',
+        //     'result' => 'ลดเวลาได้ 50%',
+        //     'user_id' => $user->id,
+        //     'status' => 'pending',
+        // ]);
     }
 }

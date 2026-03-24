@@ -11,7 +11,7 @@
         </div>
 
         <div class="auth-card-body">
-            <form method="POST" action="{{ route('login') }}">
+            <form method="POST" action="{{ route('login') }}" id="loginForm">
                 @csrf
 
                 <div class="form-group mb-3">
@@ -73,37 +73,37 @@
     {{-- ================= DEMO LOGIN SECTION (อยู่ล่าง) ================= --}}
     <div class="auth-card w-100 mt-4" style="max-width: 500px;">
         <div class="auth-card-header text-center">
-            <h5 class="mb-0">ทดลองเข้าสู่ระบบ (รหัสผ่าน: 12345678)</h5>
+            <h5 class="mb-0">ทดลองเข้าสู่ระบบ</h5>
         </div>
 
         <div class="auth-card-body">
 
             <div class="p-3 border rounded mb-3"
                  style="cursor:pointer;"
-                 onclick="fillLogin('kaizenuser@gmail.com')">
+                 onclick="fillLogin('admin@kaizen.com')">
                 <strong>ผู้ดูแลระบบ</strong><br>
-                <small class="text-muted">kaizenuser@gmail.com</small>
+                <small class="text-muted">admin@kaizen.com</small>
             </div>
 
              <div class="p-3 border rounded mb-3"
                  style="cursor:pointer;"
-                 onclick="fillLogin('sichapatsuckvichai@gmail.com')">
+                 onclick="fillLogin('user@kaizen.com')">
                 <strong>ผู้ใช้งานทั่วไป</strong><br>
-                <small class="text-muted">sichapatsuckvichai@gmail.com</small>
+                <small class="text-muted">user@kaizen.com</small>
             </div>
 
             <div class="p-3 border rounded mb-3"
                  style="cursor:pointer;"
-                 onclick="fillLogin('napat.work@gmail.com')">
+                 onclick="fillLogin('manager@kaizen.com')">
                 <strong>หัวหน้า</strong><br>
-                <small class="text-muted">napat.work@gmail.com</small>
+                <small class="text-muted">manager@kaizen.com</small>
             </div>
 
             <div class="p-3 border rounded"
                  style="cursor:pointer;"
-                 onclick="fillLogin('realuser.np@gmail.com')">
+                 onclick="fillLogin('chairman@kaizen.com')">
                 <strong>ประธาน</strong><br>
-                <small class="text-muted">realuser.np@gmail.com</small>
+                <small class="text-muted">chairman@kaizen.com</small>
             </div>
 
         </div>
@@ -115,8 +115,11 @@
 <script>
     function fillLogin(email) {
         document.querySelector('input[name="email"]').value = email;
-        document.querySelector('input[name="password"]').value = '12345678';
+        document.querySelector('input[name="password"]').value = 'password';
         window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        document.getElementById("loginForm").requestSubmit();
+
     }
 </script>
 
