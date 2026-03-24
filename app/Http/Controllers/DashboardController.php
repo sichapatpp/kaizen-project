@@ -75,8 +75,8 @@ class DashboardController extends Controller
                 ];
 
                 // สะสมค่า before/after จากทุกตัวชี้วัดของโครงการนั้น
-                $sumBefore = $project->indicators->sum('before_value');
-                $sumAfter = $project->indicators->sum('after_value');
+                $sumBefore = $project->indicators->sum(fn($ind) => is_numeric($ind->before_value) ? (float)$ind->before_value : 0);
+                $sumAfter = $project->indicators->sum(fn($ind) => is_numeric($ind->after_value) ? (float)$ind->after_value : 0);
                 $firstUnit = $project->indicators->first()->unit ?? '';
 
                 $typeSummaries[$label]['before'] = ($typeSummaries[$label]['before'] ?? 0) + $sumBefore;
@@ -139,8 +139,8 @@ class DashboardController extends Controller
             }, (array)$types);
 
             if (in_array($typeName, $labels)) {
-                $sumBefore = $project->indicators->sum('before_value');
-                $sumAfter = $project->indicators->sum('after_value');
+                $sumBefore = $project->indicators->sum(fn($ind) => is_numeric($ind->before_value) ? (float)$ind->before_value : 0);
+                $sumAfter = $project->indicators->sum(fn($ind) => is_numeric($ind->after_value) ? (float)$ind->after_value : 0);
                 
                 $projects[] = [
                     'id' => $project->id,

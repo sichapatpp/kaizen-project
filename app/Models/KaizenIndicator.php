@@ -19,8 +19,8 @@ class KaizenIndicator extends Model
     ];
 
     protected $casts = [
-        'before_value' => 'float',
-        'after_value' => 'float',
+        // 'before_value' => 'float',
+        // 'after_value' => 'float',
     ];
     
     public function project()

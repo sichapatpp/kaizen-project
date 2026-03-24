@@ -46,7 +46,7 @@
         </div>
         @endif
 
-        <form method="POST" action="{{ route('activities.saveReport', $kaizen->id) }}" enctype="multipart/form-data">
+        <form id="reportForm" method="POST" action="{{ route('activities.saveReport', $kaizen->id) }}" enctype="multipart/form-data">
             @csrf
 
             <div class="kaizen-card" style="background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 24px;">
@@ -212,7 +212,7 @@
                     <label style="display: block; font-weight: 600; font-size: 14px; margin-bottom: 12px;">รูปภาพประกอบผลงาน (Result Images)</label>
                     @if(!$readOnly)
                     <div class="upload-zone" onclick="document.getElementById('file-result').click()" style="border: 2px dashed #e2e8f0; border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.2s;">
-                        <input type="file" id="file-result" name="result_images[]" multiple accept="image/*" onchange="handleFileSelect(this,'preview-result', 'actual')" style="display:none;" />
+                        <input type="file" id="file-result" name="actual_images[]" multiple accept="image/*" onchange="handleFileSelect(this,'preview-result', 'actual')" style="display:none;" />
                         <div style="color: #64748b; font-size: 14px;">📷 คลิกเพื่อแนบรูปภาพผลลัพธ์</div>
                     </div>
                     @endif
@@ -313,8 +313,22 @@ function calculateDiff(input) {
     const before = parseFloat(beforeInput.value);
     const after = parseFloat(afterInput.value);
 
-    if (!isNaN(before) && !isNaN(after) && before !== 0) {
-        const diff = ((after - before) / Math.abs(before)) * 100;
+    if (!isNaN(before) && !isNaN(after)) {
+        const select = row.querySelector('.indicator-select');
+        let diff = 0;
+        const selectorValue = select ? select.value : '';
+        
+        if(selectorValue === 'เพิ่มรายได้'){
+            if(before === 0){
+                diff = ((after - before));
+            }else{
+                diff = ((after - before) / Math.abs(before)) * 100;
+            }
+        }else{
+            diff = ((after - before) / Math.abs(before)) * 100;
+        }
+             
+
         display.innerText = (diff > 0 ? '+' : '') + diff.toFixed(1) + '%';
         display.classList.remove('diff-positive', 'diff-negative');
         if (diff > 0) display.classList.add('diff-positive');
@@ -510,7 +524,7 @@ function deleteExistingFile(fileId, elementId) {
 }
 
 // Add event listener to form to sync files before submission
-document.querySelector('form').addEventListener('submit', function(e) {
+document.getElementById('reportForm').addEventListener('submit', function(e) {
     const input = document.getElementById('file-result');
     if (input && fileStore.actual.length > 0) {
         const dt = new DataTransfer();

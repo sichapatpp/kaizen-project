@@ -380,9 +380,12 @@ class KaizenController extends Controller
             'budget_used' => 'nullable|numeric',
             'is_achieved' => 'nullable|boolean',
             'not_achieved_detail' => 'nullable|string',
-            'result_images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'actual_images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'indicators' => 'nullable|array',
         ]);
+        // dd($request->all());
+        // อัปรูปใหม่เพิ่มเติม
+        $this->uploadFiles($request, 'actual_images', $kaizen->id, 'actual');
 
         $oldStatus = $kaizen->status;
 
@@ -412,8 +415,7 @@ class KaizenController extends Controller
             }
         }
 
-        // อัปรูปใหม่เพิ่มเติม
-        $this->uploadFiles($request, 'result_images', $kaizen->id, 'actual');
+
 
         return redirect()->route('activities.status')
             ->with('success', 'บันทึกผลการดำเนินงานและส่งอนุมัติเรียบร้อยแล้ว');
@@ -678,7 +680,7 @@ class KaizenController extends Controller
         ]);
 
         $project = KaizenProject::find($projectId, ['*']);
-        
+
         // Log the activity
         ActivityLog::create([
             'kaizen_project_id' => $projectId,
@@ -698,8 +700,9 @@ class KaizenController extends Controller
                 case 'in_progress':
                     if ($oldStatus === 'rejected' || $oldStatus === 'waiting_for_manager_result_approval' || $oldStatus === 'waiting_for_chairman_approval') {
                         $statusTh = 'ส่งกลับแก้ไข';
-                    } else if ($oldStatus === 'pending') {
-                         $statusTh = 'อนุมัติ (เริ่มดำเนินการ)';
+                    }
+                    else if ($oldStatus === 'pending') {
+                        $statusTh = 'อนุมัติ (เริ่มดำเนินการ)';
                     }
                     break;
                 case 'waiting_for_chairman_approval':
@@ -766,7 +769,7 @@ class KaizenController extends Controller
     {
         try {
             $file = KaizenFile::findOrFail($id);
-            
+
             // ตรวจสอบสิทธิ์ (เจ้าของกิจกรรม หรือ Admin/Manager?)
             $kaizen = $file->kaizenProject;
             if ($kaizen->user_id !== auth()->id() && !auth()->user()->role->role_name === 'admin') {
@@ -777,7 +780,8 @@ class KaizenController extends Controller
             $file->delete();
 
             return response()->json(['success' => true]);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }

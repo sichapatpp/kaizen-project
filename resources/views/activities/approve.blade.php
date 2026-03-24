@@ -786,10 +786,12 @@ function showDetail(id) {
     if (indicators.length > 0) {
       indBlock.style.display = 'block';
       document.getElementById('detailIndicatorRows').innerHTML = indicators.map(ind => {
+        const isRisk = ind.indicator_name === 'ลดความเสี่ยง';
         const before = parseFloat(ind.before_value);
         const after  = parseFloat(ind.after_value);
         let diffHtml = '<span style="color:#94a3b8;">—</span>';
-        if (!isNaN(before) && !isNaN(after) && before !== 0) {
+        
+        if (!isRisk && !isNaN(before) && !isNaN(after) && before !== 0) {
           const diff   = ((after - before) / Math.abs(before)) * 100;
           const color  = diff > 0 ? '#10b981' : diff < 0 ? '#ef4444' : '#64748b';
           const prefix = diff > 0 ? '+' : '';
